@@ -1,0 +1,26 @@
+parameters:
+    acme.imageloader.service.class: Acme\DemoBundle\Service\ImageLoader
+
+services:
+    acme.imageloader.service:
+        class: "%acme.imageloader.service.class%"
+
+    acme.imageloader.loader.gif:
+        class: Acme\DemoBundle\Service\Loaders\Gif
+        tags:
+            - { name: acme.image.loader }
+
+    acme.imageloader.loader.png:
+        class: Acme\DemoBundle\Service\Loaders\Png
+        tags:
+            - { name: acme.image.loader }
+
+    acme.imageloader.loader.jpg:
+        class: Acme\DemoBundle\Service\Loaders\Jpg
+        tags:
+            - { name: acme.image.loader }
+
+    acme.imageloader.loader.youtube:
+        class: Acme\DemoBundle\Service\Loaders\Youtube
+        tags:
+            - { name: acme.image.loader }
