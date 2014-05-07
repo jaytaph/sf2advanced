@@ -2,7 +2,9 @@
 
 namespace Acme\DemoBundle\Controller;
 
+use Acme\DemoBundle\Entity\Contact;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Acme\DemoBundle\Form\ContactType;
@@ -37,16 +39,17 @@ class DemoController extends Controller
      */
     public function contactAction(Request $request)
     {
-        $form = $this->createForm(new ContactType());
+        $contact = new Contact();
+
+        $form = $this->createForm(new ContactType(), $contact);
         $form->handleRequest($request);
 
         if ($form->isValid()) {
-            $mailer = $this->get('mailer');
 
-            // .. setup a message and send it
-            // http://symfony.com/doc/current/cookbook/email.html
+            $event = new GenericEvent($contact);
+            $event->setArgument('request', $request);
 
-            $request->getSession()->getFlashBag()->set('notice', 'Message sent!');
+            $this->get('event_dispatcher')->dispatch('contact.submit', $event);
 
             return new RedirectResponse($this->generateUrl('_demo'));
         }

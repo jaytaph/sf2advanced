@@ -1,0 +1,14 @@
+parameters:
+
+services:
+    acme.contact.email.listener:
+        class: Acme\DemoBundle\EventListener\ContactListener
+        arguments: [ @mailer ]
+        tags:
+            - { name: kernel.event_listener, event: contact.submit, method: onContactSubmit, priority: 0 }
+
+    acme.contact.database.listener:
+        class: Acme\DemoBundle\EventListener\ExtraContactListener
+        arguments: [ @doctrine ]
+        tags:
+            - { name: kernel.event_listener, event: contact.submit, method: onContactSubmit, priority: 10 }
