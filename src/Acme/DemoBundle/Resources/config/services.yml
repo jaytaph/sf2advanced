@@ -1,0 +1,8 @@
+parameters:
+    latlong.form.type.class: Acme\DemoBundle\Form\Type\LatLongType
+
+services:
+    latlong.form.type:
+        class: %latlong.form.type.class%
+        tags:
+          - { name: form.type, alias: latlong }
