@@ -1,0 +1,115 @@
+---
+
+- hosts: all
+  user: vagrant
+  sudo: true
+
+  vars_files:
+    - variables.yml
+
+  tasks:
+    - name: update apt
+      action: command /usr/bin/apt-get update
+
+    - name: install python dependencies
+      action: apt pkg={{ item }}  state=present
+      with_items:
+        - python-software-properties
+        - python-mysqldb
+
+    - name: install tools
+      action: apt pkg={{ item }} state=installed
+      with_items:
+        - acl
+        - vim
+        - git
+        - curl
+        - postfix
+        - varnish
+
+    - name: install web server packages
+      action: apt pkg={{ item }} state=installed
+      with_items:
+        - apache2
+        - apache2-mpm-prefork
+        - libapache2-mod-php5
+        - mysql-client
+        - mysql-server
+        - imagemagick
+
+    - name: install php packages
+      action: apt pkg={{ item }} state=installed
+      with_items:
+        - php-pear
+        - php5-apcu
+        - php5-cli
+        - php5-dev
+        - php5-gd
+        - php5-curl
+        - php5-json
+        - php5-mcrypt
+        - php5-xdebug
+        - php5-sqlite
+        - php5-mysql
+        - php5-intl
+        - php5-imagick
+
+    - name: install php configuration
+      action: template src=templates/php5/50-symfony.ini dest=/etc/php5/{{ item }}/conf.d/50-symfony.ini
+      with_items:
+        - apache2
+        - cli
+
+    - name: enable apache2 modules
+      action: file state=link src=/etc/apache2/mods-available/{{ item }} path=/etc/apache2/mods-enabled/{{ item }}
+      with_items:
+        - php5.load
+        - php5.conf
+        - rewrite.load
+        - socache_shmcb.load
+        - ssl.load
+        - ssl.conf
+      notify: restart apache
+
+    - name: remove default apache site
+      action: file path=/etc/apache2/sites-enabled/000-default.conf state=absent
+      notify: reload apache
+
+    - name: install apache configuration
+      action: template src=templates/apache2/vagrant.conf dest=/etc/apache2/sites-enabled/vagrant.conf
+      notify: reload apache
+
+    - name: install composer
+      action: shell curl -sS https://getcomposer.org/installer | /usr/bin/php && /bin/mv -f /tmp/composer.phar /usr/local/bin/composer chdir=/tmp creates=/usr/local/bin/composer
+
+    - name: install mysql configuration
+      action: template src=templates/mysql/symfony.cnf dest=/etc/mysql/conf.d/symfony.cnf
+      notify: restart mysql
+
+    - name: create database for app
+      action: mysql_db name={{ app_database }} state=present
+
+    - name: update mysql user password for app
+      action: mysql_user name={{ app_database_user }} host=localhost password={{ app_database_password }} priv={{ app_database }}.*:ALL
+
+    - name: update mysql user password for local user
+      action: mysql_user name={{ database_user }} host=% password={{ database_password }} priv={{ app_database }}.*:ALL
+
+    - name: install bash profile
+      action: template src=templates/bash/bash_profile dest=/home/vagrant/.bash_profile
+
+    - name: install symfony parameters
+      action: template src=templates/symfony/parameters.yml dest={{ app_path }}app/config/parameters.yml
+
+    - name: create link to app in home folder
+      action: file src={{ app_path }} dest=/home/vagrant/app state=link
+
+  handlers:
+    - name: reload apache
+      action: service name=apache2 state=reloaded
+
+    - name: restart apache
+      action: service name=apache2 state=restarted
+
+    - name: restart mysql
+      action: service name=mysql state=restarted
