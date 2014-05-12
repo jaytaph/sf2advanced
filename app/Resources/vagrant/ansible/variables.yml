@@ -1,0 +1,15 @@
+---
+# Application Specific variables
+app_name: symfony
+app_database: symfony
+app_database_user: symfony
+app_database_password: "v6UCY5lw4Q52rBNTviuv89En"
+
+app_path: /var/www/vagrant/
+
+user_web: www-data
+user_local: vagrant
+
+# Use these to connect to mysql from your local machine
+database_user: symfony2
+database_password: advanced
